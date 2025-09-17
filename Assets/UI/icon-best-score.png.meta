@@ -210,7 +210,10 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      icon-best-score_0: -5649612654137427775
+      icon-best-score_1: -4603264174044235767
+      icon-best-score_2: 6198676689856738297
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
