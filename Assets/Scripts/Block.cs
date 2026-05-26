@@ -1,7 +1,5 @@
-using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
-using Unity.Notifications.Android;
-using UnityEditor.U2D.Animation;
+
+using System;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -32,6 +30,8 @@ public class Block : MonoBehaviour
 
     private Vector2Int currentDragPoint;
 
+    public CellColor CellsColor;
+
     //Cache 
 
     private Camera mainCamera;
@@ -41,13 +41,22 @@ public class Block : MonoBehaviour
     {
         mainCamera = Camera.main;
     }
+
+    private void RandomColor()
+    {
+        CellsColor = Enum.GetValues(typeof(CellColor)).GetValue(UnityEngine.Random.Range(0, 3)) is CellColor color ? color : CellColor.Red;
+    }
     public void Initialize()
     {
+        RandomColor();
+        Debug.Log($"Block color {CellsColor}");
+
         for (var r = 0; r < Size; ++r)
         {
             for (var c = 0; c < Size; ++c)
             {
                 cells[r, c] = Instantiate(cellPrefab, transform);
+                cells[r, c].SetColor(CellsColor);
             }
         }
 
@@ -62,7 +71,6 @@ public class Block : MonoBehaviour
         var polyomino = Polyominos.Get(polyominoIndex);
         var polynominoRows = polyomino.GetLength(0);
         var polynominoCols = polyomino.GetLength(1);
-        var center = new Vector2(polynominoCols * 0.5f, polynominoRows * 0.5f);
 
         for (var r = 0; r < polynominoRows; ++r)
         {
@@ -97,6 +105,8 @@ public class Block : MonoBehaviour
 
         UnHighlight();
 
+        var currentColor = InputManager.Ins.CurrentBlock.CellsColor;
+
         foreach (var row in board.highlightPolyRows)
         {
             var r = polyominoRows - row - 1;
@@ -104,7 +114,7 @@ public class Block : MonoBehaviour
             {
                 if (polyomino[row, col] > 0)
                 {
-                    cells[row, col].Highlight();
+                    cells[row, col].Highlight(currentColor);
                 }
             }
         }
@@ -113,17 +123,10 @@ public class Block : MonoBehaviour
         {
             for (var row = 0; row < polyominoRows; ++row)
             {
-                if (row >= polyominoRows)
-                {
-                    Debug.Log("row: " + row + " " + polyominoRows);
-                }
-                if (col >= polyominoCols)
-                {
-                    Debug.Log("col: " + col + " " + polyominoCols);
-                }
+                
                 if (polyomino[row, col] > 0)
                 {
-                    cells[row, col].Highlight();
+                    cells[row, col].Highlight(currentColor);
                 }
             }
         }
@@ -148,12 +151,11 @@ public class Block : MonoBehaviour
 
     }
 
-
-
     private void OnMouseDown()
     {
         Debug.Log("On Mouse Down");
 
+        InputManager.Ins.CurrentBlock = this;
         inputPoint = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         transform.localPosition = position + inputOffset;
         transform.localScale = Vector3.one;
@@ -194,7 +196,7 @@ public class Block : MonoBehaviour
         previousMousePosition = Vector3.positiveInfinity;
 
         currentDragPoint = Vector2Int.RoundToInt((Vector2)transform.position);
-        if (board.Place(currentDragPoint, polyominoIndex))
+        if (board.Place(currentDragPoint, polyominoIndex, CellsColor))
         {
             gameObject.SetActive(false);
             blocks.Remove();

@@ -26,6 +26,8 @@ public class Board : MonoBehaviour
     public List<int> highlightPolyCols = new();
     public List<int> highlightPolyRows = new();
 
+    private CellColor holdingBlockColor;
+
     private void Start()
     {
         for (var r = 0; r < Size; r++)
@@ -103,6 +105,9 @@ public class Board : MonoBehaviour
 
     private void Hover()
     {
+        if (InputManager.Ins.CurrentBlock == null) return;
+        var currentColor = InputManager.Ins.CurrentBlock.CellsColor;
+
         for (int i = 0; i < hoverPoints.Count; ++i)
         {
             var hoverPoint = hoverPoints[i];
@@ -116,13 +121,13 @@ public class Board : MonoBehaviour
 
             if (numBlocksCol[hoverPoint.x] == 8)
             {
-                HighLightCol(hoverPoint.x);
+                HighLightCol(hoverPoint.x, currentColor);
                 fullBlockCol.Add(hoverPoint.x);
             }
 
             if (numBlocksRow[hoverPoint.y] == 8)
             {
-                HighLightRow(hoverPoint.y);
+                HighLightRow(hoverPoint.y, currentColor);
                 fullBlockRow.Add(hoverPoint.y);
             }
         }
@@ -134,20 +139,20 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void HighLightRow(int r)
+    private void HighLightRow(int r, CellColor color)
     {
         for (var c = 0; c < Size; ++c)
         {
-            cells[r, c].Highlight();
+            cells[r, c].Highlight(color);
         }
         
     }
 
-    private void HighLightCol(int c)
+    private void HighLightCol(int c, CellColor color)
     {
         for (var r = 0; r < Size; ++r)
         {
-            cells[r, c].Highlight();
+            cells[r, c].Highlight(color);
         }
     }
 
@@ -180,7 +185,7 @@ public class Board : MonoBehaviour
         highlightPolyRows.Clear();
     }
 
-    public bool Place(Vector2Int point, int polyominoIndex)
+    public bool Place(Vector2Int point, int polyominoIndex, CellColor color)
     {
         var polyomino = Polyominos.Get(polyominoIndex);
         var polyominoRows = polyomino.GetLength(0);
@@ -191,18 +196,19 @@ public class Board : MonoBehaviour
 
         if (hoverPoints.Count > 0)
         {
-            Place();
+            Place(color);
             return true;
         }
 
         return false;
     }
 
-    private void Place()
+    private void Place(CellColor color)
     {
         foreach (var hoverPoint in hoverPoints)
         {
             data[hoverPoint.y, hoverPoint.x] = 2;
+            cells[hoverPoint.y, hoverPoint.x].SetColor(color);
             cells[hoverPoint.y, hoverPoint.x].Normal();
             numBlocksRow[hoverPoint.y]++;
             numBlocksCol[hoverPoint.x]++;
